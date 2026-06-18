@@ -14,7 +14,7 @@ npx playwright install chromium
 ## Reproduction A — recorder / codegen (the real-world impact)
 
 ```bash
-npx playwright codegen file://$PWD/repro.html      # Windows: npx playwright codegen file:///%cd%/repro.html
+npx playwright codegen ./repro.html
 ```
 
 1. The recorded browser opens with a single **"Click me"** button.
