@@ -7,6 +7,8 @@ and similar libraries do.
 ## A — Deterministic, no UI (the root cause)
 
 ```bash
+git clone https://github.com/whgksqls9999/pw-tojson-recorder-repro
+cd pw-tojson-recorder-repro
 npm install
 npx playwright install chromium
 npx playwright test repro.spec.ts
