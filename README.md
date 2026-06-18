@@ -11,15 +11,40 @@ npm install
 npx playwright install chromium
 ```
 
-## Reproduction A — recorder / codegen (the real-world impact)
+## Reproduction A — deterministic, no UI (the root cause)
 
 ```bash
-npx playwright codegen ./repro.html
+npx playwright test repro.spec.ts
+```
+
+The test calls `page.exposeFunction` on a page that defined `Array.prototype.toJSON`
+and fails with:
+
+```
+Error: serializedArgs is not an array. This can happen when Array.prototype.toJSON is defined incorrectly
+```
+
+## Reproduction B — recorder / codegen (the real-world impact)
+
+The recorder uses page bindings internally (`__pw_recorderRecordAction`, ...), so it
+fails the same way on every click.
+
+Serve the page over `http://` (a `file://` page triggers a separate "file: URLs are unique
+security origins" error that masks this bug, so use the included server):
+
+```bash
+node server.js
+```
+
+Then, in another terminal:
+
+```bash
+npx playwright codegen http://localhost:3000
 ```
 
 1. The recorded browser opens with a single **"Click me"** button.
 2. Click the button.
-3. Recording stops working and the console shows:
+3. Recording stops working and the console shows the same error as Reproduction A:
 
    ```
    Uncaught (in promise) Error: serializedArgs is not an array. This can happen when Array.prototype.toJSON is defined incorrectly
@@ -29,16 +54,6 @@ npx playwright codegen ./repro.html
    ```
 
 No action can be recorded on such a page.
-
-## Reproduction B — deterministic, no UI (same root cause)
-
-```bash
-npx playwright test repro.spec.ts
-```
-
-The test calls `page.exposeFunction` on a page that defined `Array.prototype.toJSON`
-and fails with the same error. The recorder uses page bindings internally
-(`__pw_recorderRecordAction`, ...), so it fails the same way on every click.
 
 ## Why this is legal page code
 
