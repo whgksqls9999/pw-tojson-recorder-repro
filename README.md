@@ -1,59 +1,43 @@
 # Playwright recorder breaks when the page defines `Array.prototype.toJSON`
 
-Minimal reproduction for a Playwright bug: the recorder (codegen) and page bindings
-(`exposeFunction` / `exposeBinding`) fail when the page defines `Array.prototype.toJSON`,
-as Prototype.js and similar libraries do.
+Minimal reproduction: the recorder (codegen) and page bindings (`exposeFunction` /
+`exposeBinding`) fail when the page defines `Array.prototype.toJSON`, as Prototype.js
+and similar libraries do.
 
-## Setup
+## A — Deterministic, no UI (the root cause)
 
 ```bash
 npm install
 npx playwright install chromium
-```
-
-## Reproduction A — deterministic, no UI (the root cause)
-
-```bash
 npx playwright test repro.spec.ts
 ```
 
-The test calls `page.exposeFunction` on a page that defined `Array.prototype.toJSON`
-and fails with:
+Fails with:
 
 ```
 Error: serializedArgs is not an array. This can happen when Array.prototype.toJSON is defined incorrectly
 ```
 
-## Reproduction B — recorder / codegen (the real-world impact)
+## B — Recorder / codegen (the real-world impact)
 
-The recorder uses page bindings internally (`__pw_recorderRecordAction`, ...), so it
-fails the same way on every click.
-
-Serve the page over `http://` (a `file://` page triggers a separate "file: URLs are unique
-security origins" error that masks this bug, so use the included server):
-
-```bash
-node server.js
-```
-
-Then, in another terminal:
-
-```bash
-npx playwright codegen http://localhost:3000
-```
-
-1. The recorded browser opens with a single **"Click me"** button.
-2. Click the button.
-3. Recording stops working and the console shows the same error as Reproduction A:
-
+1. Start the recorder and navigate to any page (even `about:blank`):
+   ```bash
+   npx playwright codegen
    ```
-   Uncaught (in promise) Error: serializedArgs is not an array. This can happen when Array.prototype.toJSON is defined incorrectly
-       at _PageBinding.dispatch (.../playwright-core/lib/coreBundle.js)
-       at _Page.onBindingCalled (.../playwright-core/lib/coreBundle.js)
-       at _FrameSession._onBindingCalled (.../playwright-core/lib/coreBundle.js)
+2. Open the browser's DevTools → Console and paste:
+   ```js
+   Array.prototype.toJSON = function () {
+     var results = [];
+     this.forEach(function (value) {
+       results.push(
+         typeof value === 'object' ? JSON.stringify(value) : String(value)
+       );
+     });
+     return '[' + results.join(', ') + ']';
+   };
    ```
-
-No action can be recorded on such a page.
+3. Click any element / the recorder's controls.
+4. Recording stops with the same error as A.
 
 ## Why this is legal page code
 
