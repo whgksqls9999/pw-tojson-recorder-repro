@@ -1,0 +1,8 @@
+{
+  "name": "pw-tojson-recorder-repro",
+  "private": true,
+  "description": "Minimal reproduction: Playwright recorder + page bindings break when the page defines Array.prototype.toJSON",
+  "devDependencies": {
+    "@playwright/test": "^1.61.0"
+  }
+}

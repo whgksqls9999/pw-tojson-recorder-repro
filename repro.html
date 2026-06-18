@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Playwright recorder + Array.prototype.toJSON repro</title>
+</head>
+<body>
+  <h1>Array.prototype.toJSON repro</h1>
+  <button id="btn">Click me</button>
+
+  <script>
+    // Mirrors a real-world page that overrides Array.prototype.toJSON
+    // (e.g. Prototype.js-style serialization). Returning a STRING instead
+    // of leaving toJSON absent is what breaks JSON.stringify in Playwright's
+    // injected recorder.
+    Array.prototype.toJSON = function () {
+      var results = [];
+      this.forEach(function (value) {
+        results.push(typeof value === 'object' ? JSON.stringify(value) : String(value));
+      });
+      return '[' + results.join(', ') + ']';
+    };
+  </script>
+</body>
+</html>

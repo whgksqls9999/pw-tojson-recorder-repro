@@ -1,0 +1,9 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+.DS_Store
+
+# Local drafts — not part of the public reproduction
+ISSUE.md
+PR.md
